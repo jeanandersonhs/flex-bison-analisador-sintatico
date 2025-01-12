@@ -39,7 +39,9 @@ NUM     {digit}+
 WS      [ \t\r]+
 NL      \n
 COM_OP  "=="|"!="|"<"|"<="|">"|">="
+INVALID {digit}+({letter}|{digit})*
 LIT_STRING    \"([^\"\\\n]|\\[abfnrtv\"\'\\0])*\"
+
 
 %%
 
@@ -71,6 +73,7 @@ LIT_STRING    \"([^\"\\\n]|\\[abfnrtv\"\'\\0])*\"
 
 {WS}                ; /* Ignore spaces */
 
+{INVALID}           { fprintf(out, "<%d, ERROR, %s>\n", yylineno, yytext); return 0; }
 .                   { fprintf(out, "<%d, ERROR, %s>\n", yylineno, yytext); return 0; }
 
 %%
