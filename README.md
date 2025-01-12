@@ -70,6 +70,25 @@ Forneça o arquivo de entrada com o código a ser analisado e um arquivo de saí
 ./analisador <arquivo_entrada.c> <arquivo_saida.txt>
 ```
 
+Esses processo pode ser automatizado através de um arquivo de configuração Makefile.
+Para construir o arquivo executável basta realizar:
+
+```bash
+make build
+```
+
+Para executar basta fazer:
+
+```bash
+make run
+```
+
+Ou ainda é possível fazer o `build` e `run` em um único momento com:
+
+```bash
+make all
+```
+
 ### 3. Exemplo
 Suponha que você tenha um arquivo `exemplo.c` com o seguinte código:
 
