@@ -1,6 +1,6 @@
 all: build run
 
-build: analisador.lex lex.yy.c
+build: analisador.lex
 	flex analisador.lex
 	gcc lex.yy.c -o scanner
 run: scanner exemplo.c 
