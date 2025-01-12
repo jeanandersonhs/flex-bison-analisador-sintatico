@@ -39,6 +39,7 @@ NUM     {digit}+
 WS      [ \t\r]+
 NL      \n
 COM_OP  "=="|"!="|"<"|"<="|">"|">="
+LIT_STRING    \"([^\"\\\n]|\\[abfnrtv\"\'\\0])*\"
 
 %%
 
@@ -62,6 +63,10 @@ COM_OP  "=="|"!="|"<"|"<="|">"|">="
 {ID}                {
                       int index = insert_symbol(yytext);
                       fprintf(out, "<%d, ID, %s>\n", index, yytext);
+                  }
+
+{LIT_STRING}        {
+                        fprintf(out, "<str, %s>\n", yytext);
                   }
 
 {WS}                ; /* Ignore spaces */
