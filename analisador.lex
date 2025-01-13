@@ -33,17 +33,43 @@
 
 digit       [0-9]
 letter      [a-zA-Z]
-ID          {letter}|_({letter}|{digit}|_)*
+
+ID          ({letter}|_)({letter}|{digit}|_)*
 
 FLOAT       {digit}+\.{digit}+([eE][-+]?{digit}+)?
-
 NUM         {digit}+
+
+INT             "int"
+VOID            "void"
+IF              "if"
+ELSE            "else"
+WHILE           "while"
+RETURN          "return"
+
 WS          [ \t\r]+
 NL          \n
-RELOP       "=="|"!="|"<"|"<="|">"|">="
+
+GT          [">"]
+LT          ["<"]
+EQ          ["="]
+NE          "!="
+GE          ">="
+LE          "<="
+COMP_EQ     "=="
+
 STRING      \"([^\"\\\n]|\\[abfnrtv\"\'\\0])*\"
-SYMBOL      [\[\]\(\)\{\};:,=]
-INVALID     {letter}({letter}|{digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*
+
+OPN_SQR_BKT     "\["
+CLS_SQR_BKT     "\]"
+OPN_CURLY_BKT   "\{"
+CLS_CURLY_BKT   "\}"
+SEMICOLON       [";"]
+COLON           [":"]
+COMMA           [","]
+OPN_PARENT      "\("
+CLS_PARENT      "\)"
+
+INVALID     ({digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*({letter}|{digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*
 
 %%
 
@@ -55,16 +81,32 @@ INVALID     {letter}({letter}|{digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*
 <COMMENT><<EOF>>    { fprintf(out, "<%d, ERROR, \"Unclosed comment\">\n", linha); }
 <COMMENT>.          ; /* Ignorar outros caracteres no comentário */
 
-"int"|"float"|"void"|"if"|"else"|"while"|"return" {
-                      fprintf(out, "<KEY, %s>\n", yytext);
-                  }
+{GT}               { fprintf(out, "<RELOP, GT, %s>\n", yytext); }
+{LT}               { fprintf(out, "<RELOP, LT, %s>\n", yytext); }
+{EQ}               { fprintf(out, "<RELOP, EQ, %s>\n", yytext); }
+{NE}               { fprintf(out, "<RELOP, NE, %s>\n", yytext); }
+{GE}               { fprintf(out, "<RELOP, GE, %s>\n", yytext); }
+{LE}               { fprintf(out, "<RELOP, LE, %s>\n", yytext); }
 
-{RELOP}            { fprintf(out, "<RELOP, %s>\n", yytext); }
-"="|";"|","|"("|")"|"{"|"}"|"["|"]"|":"  { fprintf(out, "<SYM, %s>\n", yytext); }
-"+"|"-"|"*"|"/"     { fprintf(out, "<OP, %s>\n", yytext); }
+{OPN_SQR_BKT}     { fprintf(out, "<SYM, OPN_SQR_BKT, %s>\n", yytext); }
+{CLS_SQR_BKT}     { fprintf(out, "<SYM, CLS_SQR_BKT, %s>\n", yytext); }
+{OPN_CURLY_BKT}   { fprintf(out, "<SYM, OPN_CURLY_BKT, %s>\n", yytext); }
+{CLS_CURLY_BKT}   { fprintf(out, "<SYM, CLS_CURLY_BKT, %s>\n", yytext); }
+{SEMICOLON}       { fprintf(out, "<SYM, SEMICOLON, %s>\n", yytext); }
+{COLON}           { fprintf(out, "<SYM, COLON, %s>\n", yytext); }
+{COMMA}           { fprintf(out, "<SYM, COMMA, %s>\n", yytext); }
+{OPN_PARENT}      { fprintf(out, "<SYM, OPN_PARENT, %s>\n", yytext); }
+{CLS_PARENT}      { fprintf(out, "<SYM, CLS_PARENT, %s>\n", yytext); }
 
-{FLOAT}             { fprintf(out, "<FLOAT, %s>\n", yytext); }
-{NUM}               { fprintf(out, "<NUM, %s>\n", yytext); }
+"+"|"-"|"*"|"/"    { fprintf(out, "<OP, %s>\n", yytext); }
+
+{FLOAT}            { fprintf(out, "<KEY, FLOAT, %s>\n", yytext); }
+{INT}              { fprintf(out, "<KEY, INT, %s>\n", yytext); }
+{VOID}             { fprintf(out, "<KEY, VOID, %s>\n", yytext); }
+{IF}               { fprintf(out, "<KEY, IF, %s>\n", yytext); }
+{ELSE}             { fprintf(out, "<KEY, ELSE, %s>\n", yytext); }
+{WHILE}            { fprintf(out, "<KEY, WHILE, %s>\n", yytext); }
+{RETURN}           { fprintf(out, "<KEY, RETURN, %s>\n", yytext); }
 
 {ID}                {
                       int index = insert_symbol(yytext);
