@@ -1,6 +1,1 @@
-int main() {
-    /* Comentário aberto
-    /* Comentário aninhado */
-    "String sem fechamento
-    int a = 10 @;
-}
+int : 324_sdss22

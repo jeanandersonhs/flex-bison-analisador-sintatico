@@ -1,0 +1,5 @@
+<KEY, INT, int>
+<SYM, COLON, :>
+<1, ERROR, "Invalid sequence '324_sdss22'">
+
+Tabela de Símbolos:
