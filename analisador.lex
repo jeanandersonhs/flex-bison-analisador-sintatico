@@ -33,7 +33,7 @@
 
 digit       [0-9]
 letter      [a-zA-Z]
-ID          {letter}|_({letter}|{digit}|_)*
+ID          (_|{letter})({letter}|{digit}|_)*
 
 FLOAT       {digit}+\.{digit}+([eE][-+]?{digit}+)?
 
@@ -43,7 +43,7 @@ NL          \n
 RELOP       "=="|"!="|"<"|"<="|">"|">="
 STRING      \"([^\"\\\n]|\\[abfnrtv\"\'\\0])*\"
 SYMBOL      [\[\]\(\)\{\};:,=]
-INVALID     {letter}({letter}|{digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*
+INVALID     ({digit}|{letter})({letter}|{digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*
 
 %%
 
@@ -60,6 +60,7 @@ INVALID     {letter}({letter}|{digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*
                   }
 
 {RELOP}            { fprintf(out, "<RELOP, %s>\n", yytext); }
+
 "="|";"|","|"("|")"|"{"|"}"|"["|"]"|":"  { fprintf(out, "<SYM, %s>\n", yytext); }
 "+"|"-"|"*"|"/"     { fprintf(out, "<OP, %s>\n", yytext); }
 
