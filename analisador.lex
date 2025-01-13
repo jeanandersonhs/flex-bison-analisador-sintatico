@@ -38,9 +38,11 @@ FLOAT       {digit}+\.{digit}+
 NUM         {digit}+
 WS          [ \t\r]+
 NL          \n
-COM_OP      "=="|"!="|"<"|"<="|">"|">="
-INVALID     {digit}+({letter}|{digit})*
-LIT_STRING  \"([^\"\\\n]|\\[abfnrtv\"\'\\0])*\"
+RELOP       "=="|"!="|"<"|"<="|">"|">="
+STRING      \"([^\"\\\n]|\\[abfnrtv\"\'\\0])*\"
+SYMBOL     [\[\]\(\)\{\};:,=]
+INVALID     ({letter}|{digit})[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=]+
+
 
 
 %%
@@ -57,7 +59,7 @@ LIT_STRING  \"([^\"\\\n]|\\[abfnrtv\"\'\\0])*\"
                       fprintf(out, "<KEY, %s>\n", yytext);
                   }
 
-{COM_OP}            { fprintf(out, "<COM_OP, %s>\n", yytext); }
+{RELOP}            { fprintf(out, "<RELOP, %s>\n", yytext); }
 "="|";"|","|"("|")"|"{"|"}"|"["|"]"|":"  { fprintf(out, "<SYM, %s>\n", yytext); }
 "+"|"-"|"*"|"/"     { fprintf(out, "<OP, %s>\n", yytext); }
 
@@ -69,7 +71,7 @@ LIT_STRING  \"([^\"\\\n]|\\[abfnrtv\"\'\\0])*\"
                       fprintf(out, "<%d, ID, %s>\n", index, yytext);
                   }
 
-{LIT_STRING}        { fprintf(out, "<str, %s>\n", yytext); }
+{STRING}        { fprintf(out, "<STRING, %s>\n", yytext); }
 
 \"([^\"\\\n]|\\[abfnrtv\"\'\\0])*\n {
                       fprintf(out, "<%d, ERROR, \"Unclosed string\">\n", yylineno);
@@ -77,7 +79,9 @@ LIT_STRING  \"([^\"\\\n]|\\[abfnrtv\"\'\\0])*\"
 
 {WS}                ; /* Ignore spaces */
 
-{INVALID}           { fprintf(out, "<%d, ERROR, %s>\n", yylineno, yytext); }
+{INVALID} {
+    fprintf(out, "<%d, ERROR, \"Invalid sequence '%s'\">\n", yylineno, yytext);
+}
 
 .                   { fprintf(out, "<%d, ERROR, \"Unrecognized character '%s'\">\n", yylineno, yytext); }
 

@@ -137,23 +137,23 @@ O analisador reconhece e gera tokens para:
 
 2. **Vetores**:
    - `float arr[10]; arr[0] = 1.5;`
-   - Tokens: `<KEY, float>`, `<1, ID, arr>`, `<SYM, [>`, `<NUM, 10>`, `<SYM, ]>`.
+   - Tokens: `<KEY, float>`, `<1, ID, arr>`, `<SYM, [>`, `<NUM, 10>`, `<SYM, ]>`...
 
 3. **Expressões aritméticas**:
    - `b = a + 2 * 3;`
-   - Tokens: `<1, ID, b>`, `<SYM, =>`, `<1, ID, a>`, `<OP, +>`.
+   - Tokens: `<1, ID, b>`, `<SYM, =>`, `<1, ID, a>`, `<OP, +>`, `<NUM, 2>`, `<OP, *>`, `<NUM, 3>`.
 
 4. **Desvios condicionais**:
-   - `if (a > b) { ... }`
-   - Tokens: `<KEY, if>`, `<SYM, (>`, `<1, ID, a>`, `<COM_OP, >>`.
+   - `if (a > b) { return 0 }`
+   - Tokens: `<KEY, if>`, `<SYM, (>`, `<1, ID, a>`, `<COM_OP, >>`, `<2, ID, b>`, `<SYM, )>`...
 
 5. **Laços de repetição**:
-   - `while (x < 10) { ... }`
-   - Tokens: `<KEY, while>`, `<SYM, (>`, `<1, ID, x>`.
+   - `while (x < 10) { x = x + 1 }`
+   - Tokens: `<KEY, while>`, `<SYM, (>`, `<1, ID, x>`, `<COM_OP, <>`, `<NUM, 10>`, `<SYM, )>`...
 
 6. **Funções**:
    - `float soma(float a, float b) { return a + b; }`
-   - Tokens: `<KEY, float>`, `<1, ID, soma>`.
+   - Tokens: `<KEY, float>`, `<1, ID, soma>`, `...`, `<KEY, return>`, ...
 
 ---
 
@@ -228,11 +228,11 @@ O analisador léxico foi projetado para detectar e relatar diversos tipos de err
    - **Descrição**: Identificadores não podem começar com um número nem conter caracteres inválidos.
    - **Exemplo**:
      ```c
-     int 123abc;
+     int 123$abc;
      ```
    - **Saída**:
      ```plaintext
-     <5, ERROR, "123abc">
+     <5, ERROR, "Invalid sequence '123$abc'">
      ```
 
 ---
