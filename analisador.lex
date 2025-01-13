@@ -31,16 +31,16 @@
 %option yylineno
 %x COMMENT
 
-digit   [0-9]
-letter  [a-zA-Z]
-ID      {letter}({letter}|{digit})*
-FLOAT   {digit}+\.{digit}+
-NUM     {digit}+
-WS      [ \t\r]+
-NL      \n
-COM_OP  "=="|"!="|"<"|"<="|">"|">="
-INVALID {digit}+({letter}|{digit})*
-LIT_STRING    \"([^\"\\\n]|\\[abfnrtv\"\'\\0])*\"
+digit       [0-9]
+letter      [a-zA-Z]
+ID          {letter}({letter}|{digit})*
+FLOAT       {digit}+\.{digit}+
+NUM         {digit}+
+WS          [ \t\r]+
+NL          \n
+COM_OP      "=="|"!="|"<"|"<="|">"|">="
+INVALID     {digit}+({letter}|{digit})*
+LIT_STRING  \"([^\"\\\n]|\\[abfnrtv\"\'\\0])*\"
 
 
 %%
@@ -48,8 +48,10 @@ LIT_STRING    \"([^\"\\\n]|\\[abfnrtv\"\'\\0])*\"
 {NL}                { linha = yylineno; }
 "/*"                { linha = yylineno; BEGIN(COMMENT); }
 <COMMENT>"*/"       { BEGIN(INITIAL); }
-<COMMENT>.          ;
-<COMMENT><<EOF>>    { fprintf(out, "<%d, ERROR, \"Unclosed comment\">\n", linha); return 0; }
+<COMMENT>"/*"       { fprintf(out, "<%d, ERROR, \"Nested comment\">\n", yylineno); }
+<COMMENT>{NL}       { linha = yylineno; } /* Atualizar número da linha */
+<COMMENT><<EOF>>    { fprintf(out, "<%d, ERROR, \"Unclosed comment\">\n", linha); }
+<COMMENT>.          ; /* Ignorar outros caracteres no comentário */
 
 "int"|"float"|"void"|"if"|"else"|"while"|"return" {
                       fprintf(out, "<KEY, %s>\n", yytext);
@@ -67,14 +69,17 @@ LIT_STRING    \"([^\"\\\n]|\\[abfnrtv\"\'\\0])*\"
                       fprintf(out, "<%d, ID, %s>\n", index, yytext);
                   }
 
-{LIT_STRING}        {
-                        fprintf(out, "<str, %s>\n", yytext);
+{LIT_STRING}        { fprintf(out, "<str, %s>\n", yytext); }
+
+\"([^\"\\\n]|\\[abfnrtv\"\'\\0])*\n {
+                      fprintf(out, "<%d, ERROR, \"Unclosed string\">\n", yylineno);
                   }
 
 {WS}                ; /* Ignore spaces */
 
-{INVALID}           { fprintf(out, "<%d, ERROR, %s>\n", yylineno, yytext); return 0; }
-.                   { fprintf(out, "<%d, ERROR, %s>\n", yylineno, yytext); return 0; }
+{INVALID}           { fprintf(out, "<%d, ERROR, %s>\n", yylineno, yytext); }
+
+.                   { fprintf(out, "<%d, ERROR, \"Unrecognized character '%s'\">\n", yylineno, yytext); }
 
 %%
 

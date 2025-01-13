@@ -1,5 +1,19 @@
 # Analisador Léxico - Subconjunto da Linguagem C
 
+## Tabela de Conteúdos
+
+- [Visão Geral](#visão-geral)
+- [Funcionalidades da Linguagem](#funcionalidades-da-linguagem)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Requisitos](#requisitos)
+- [Como Compilar e Executar](#como-compilar-e-executar)
+- [Casos de Uso](#casos-de-uso)
+- [Tabela de Símbolos](#tabela-de-símbolos)
+- [Erros Léxicos](#erros-léxicos)
+- [Contribuindo](#contribuindo)
+
+## Visão Geral
+
 Este projeto implementa um analisador léxico para um subconjunto da linguagem C. O analisador foi desenvolvido utilizando o **Flex** e suporta funcionalidades essenciais de linguagens imperativas, como inicialização de variáveis, controle de fluxo, vetores, e funções.
 
 ---
@@ -36,10 +50,10 @@ A linguagem reconhece os seguintes elementos:
 
 O projeto contém os seguintes arquivos principais:
 
-- **analisador.l**: Código fonte do analisador léxico escrito em Flex.
+- **analisador.lex**: Código fonte do analisador léxico escrito em Flex.
 - **README.md**: Este arquivo, contendo informações sobre o projeto.
 - **Exemplos de teste**: Arquivos `.c` com casos para validação do analisador.
-- **Tabela de símbolos**: Gera uma tabela de símbolos ao final da execução.
+- **Entrada**: Input `.c` a ser analisado pelo Analisador Léxico.
 
 ---
 
@@ -59,7 +73,7 @@ sudo apt-get install flex
 Use o comando abaixo para gerar o analisador léxico:
 
 ```bash
-flex analisador.l
+flex analisador.lex
 gcc lex.yy.c -o analisador
 ```
 
@@ -90,7 +104,7 @@ make all
 ```
 
 ### 3. Exemplo
-Suponha que você tenha um arquivo `exemplo.c` com o seguinte código:
+Suponha que você tenha um arquivo `entrada.c` com o seguinte código:
 
 ```c
 int main() {
@@ -106,40 +120,40 @@ int main() {
 Execute o analisador:
 
 ```bash
-./analisador exemplo.c saida.txt
+./analisador entrada.c saida.txt
 ```
 
 O arquivo `saida.txt` conterá os tokens gerados, além da tabela de símbolos ao final.
 
 ---
 
-## Casos de Uso e Testes
+## Casos de Uso
 
 O analisador reconhece e gera tokens para:
 
 1. **Declarações de variáveis**:
    - `int x = 5;`
-   - Token: `<1, KEY, int>`, `<1, ID, x>`, `<1, SYM, =>`, `<1, NUM, 5>`.
+   - Token: `<KEY, int>`, `<1, ID, x>`, `<SYM, =>`, `<NUM, 5>`.
 
 2. **Vetores**:
    - `float arr[10]; arr[0] = 1.5;`
-   - Tokens: `<1, KEY, float>`, `<1, ID, arr>`, `<1, SYM, [>`, `<1, NUM, 10>`, `<1, SYM, ]>`.
+   - Tokens: `<KEY, float>`, `<1, ID, arr>`, `<SYM, [>`, `<NUM, 10>`, `<SYM, ]>`.
 
 3. **Expressões aritméticas**:
    - `b = a + 2 * 3;`
-   - Tokens: `<1, ID, b>`, `<1, SYM, =>`, `<1, ID, a>`, `<1, OP, +>`.
+   - Tokens: `<1, ID, b>`, `<SYM, =>`, `<1, ID, a>`, `<OP, +>`.
 
 4. **Desvios condicionais**:
    - `if (a > b) { ... }`
-   - Tokens: `<1, KEY, if>`, `<1, SYM, (>`, `<1, ID, a>`, `<1, COM_OP, >>`.
+   - Tokens: `<KEY, if>`, `<SYM, (>`, `<1, ID, a>`, `<COM_OP, >>`.
 
 5. **Laços de repetição**:
    - `while (x < 10) { ... }`
-   - Tokens: `<1, KEY, while>`, `<1, SYM, (>`, `<1, ID, x>`.
+   - Tokens: `<KEY, while>`, `<SYM, (>`, `<1, ID, x>`.
 
 6. **Funções**:
    - `float soma(float a, float b) { return a + b; }`
-   - Tokens: `<1, KEY, float>`, `<1, ID, soma>`.
+   - Tokens: `<KEY, float>`, `<1, ID, soma>`.
 
 ---
 
@@ -155,6 +169,81 @@ Tabela de Símbolos:
 <4, arr>
 <5, soma>
 ```
+
+---
+
+## Erros Léxicos
+
+O analisador léxico foi projetado para detectar e relatar diversos tipos de erros no código-fonte que violem as regras do subconjunto da linguagem C suportado. Abaixo estão os erros que podem ser detectados, junto com uma breve descrição:
+
+### Tipos de Erros Detectados
+
+1. **Comentário Não Fechado**:
+   - **Descrição**: Um comentário iniciado com `/*` não foi encerrado com `*/`.
+   - **Exemplo**:
+     ```c
+     /* Comentário aberto
+     ```
+   - **Saída**:
+     ```plaintext
+     <2, ERROR, "Unclosed comment">
+     ```
+
+2. **Comentário Aninhado**:
+   - **Descrição**: Comentários não podem ser aninhados no subconjunto da linguagem C suportado.
+   - **Exemplo**:
+     ```c
+     /* Comentário aberto
+        /* Comentário aninhado */
+     */
+     ```
+   - **Saída**:
+     ```plaintext
+     <2, ERROR, "Nested comment">
+     ```
+
+3. **String Não Fechada**:
+   - **Descrição**: Uma string iniciada com `"` não foi encerrada corretamente.
+   - **Exemplo**:
+     ```c
+     "String sem fechamento
+     ```
+   - **Saída**:
+     ```plaintext
+     <3, ERROR, "Unclosed string">
+     ```
+
+4. **Caractere Não Reconhecido**:
+   - **Descrição**: Um caractere que não pertence à gramática da linguagem foi encontrado.
+   - **Exemplo**:
+     ```c
+     int a = 10 @;
+     ```
+   - **Saída**:
+     ```plaintext
+     <4, ERROR, "Unrecognized character '@'">
+     ```
+
+5. **Identificador Inválido**:
+   - **Descrição**: Identificadores não podem começar com um número nem conter caracteres inválidos.
+   - **Exemplo**:
+     ```c
+     int 123abc;
+     ```
+   - **Saída**:
+     ```plaintext
+     <5, ERROR, "123abc">
+     ```
+
+---
+
+### Como os Erros São Tratados
+
+- **Detecção e Continuidade**: O analisador não interrompe a execução ao encontrar um erro. Ele registra o erro no arquivo de saída e continua analisando o restante do código.
+- **Relatório no Arquivo de Saída**: Cada erro é reportado no formato:
+  ```plaintext
+  <linha, ERROR, "descrição do erro">
+  ```
 
 ---
 
