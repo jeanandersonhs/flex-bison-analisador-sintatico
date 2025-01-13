@@ -33,17 +33,17 @@
 
 digit       [0-9]
 letter      [a-zA-Z]
-ID          {letter}({letter}|{digit})*
-FLOAT       {digit}+\.{digit}+
+ID          {letter}|_({letter}|{digit}|_)*
+
+FLOAT       {digit}+\.{digit}+([eE][-+]?{digit}+)?
+
 NUM         {digit}+
 WS          [ \t\r]+
 NL          \n
 RELOP       "=="|"!="|"<"|"<="|">"|">="
 STRING      \"([^\"\\\n]|\\[abfnrtv\"\'\\0])*\"
-SYMBOL     [\[\]\(\)\{\};:,=]
-INVALID     ({letter}|{digit})[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=]+
-
-
+SYMBOL      [\[\]\(\)\{\};:,=]
+INVALID     {letter}({letter}|{digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*
 
 %%
 
@@ -83,7 +83,7 @@ INVALID     ({letter}|{digit})[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=]+
     fprintf(out, "<%d, ERROR, \"Invalid sequence '%s'\">\n", yylineno, yytext);
 }
 
-.                   { fprintf(out, "<%d, ERROR, \"Unrecognized character '%s'\">\n", yylineno, yytext); }
+.                   { fprintf(out, "<%d, ERROR, \"Invalid use of character '%s'\">\n", yylineno, yytext); }
 
 %%
 

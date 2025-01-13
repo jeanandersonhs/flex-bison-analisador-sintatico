@@ -145,11 +145,11 @@ O analisador reconhece e gera tokens para:
 
 4. **Desvios condicionais**:
    - `if (a > b) { return 0 }`
-   - Tokens: `<KEY, if>`, `<SYM, (>`, `<1, ID, a>`, `<COM_OP, >>`, `<2, ID, b>`, `<SYM, )>`...
+   - Tokens: `<KEY, if>`, `<SYM, (>`, `<1, ID, a>`, `<RELOP, >>`, `<2, ID, b>`, `<SYM, )>`...
 
 5. **Laços de repetição**:
    - `while (x < 10) { x = x + 1 }`
-   - Tokens: `<KEY, while>`, `<SYM, (>`, `<1, ID, x>`, `<COM_OP, <>`, `<NUM, 10>`, `<SYM, )>`...
+   - Tokens: `<KEY, while>`, `<SYM, (>`, `<1, ID, x>`, `<RELOP, <>`, `<NUM, 10>`, `<SYM, )>`...
 
 6. **Funções**:
    - `float soma(float a, float b) { return a + b; }`
@@ -221,7 +221,7 @@ O analisador léxico foi projetado para detectar e relatar diversos tipos de err
      ```
    - **Saída**:
      ```plaintext
-     <4, ERROR, "Unrecognized character '@'">
+     <4, ERROR, "Invalid use of character '@'">
      ```
 
 5. **Identificador Inválido**:
