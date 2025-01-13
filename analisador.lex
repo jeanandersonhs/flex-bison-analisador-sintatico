@@ -43,7 +43,7 @@ NL          \n
 RELOP       "=="|"!="|"<"|"<="|">"|">="
 STRING      \"([^\"\\\n]|\\[abfnrtv\"\'\\0])*\"
 SYMBOL      [\[\]\(\)\{\};:,=]
-INVALID     {letter}({letter}|{digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*
+INVALID     ({digit}|{letter})({letter}|{digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*
 
 %%
 
