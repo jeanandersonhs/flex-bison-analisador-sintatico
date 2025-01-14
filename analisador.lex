@@ -147,7 +147,7 @@ INVALID_CHAR        ({letter}|_)*({invalid_char}+({letter}|{digit}|_))*
 }
 
 
-.                   { fprintf(out, "<%d, ERROR, \"Invalid '%s'\">\n", yylineno, yytext); }
+.                   { fprintf(out, "<%d, ERROR, \"Invalid character '%s'\">\n", yylineno, yytext); }
 
 %%
 
