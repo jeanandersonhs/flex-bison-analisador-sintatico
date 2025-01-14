@@ -133,10 +133,10 @@ INVALID     ({digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=_])*({letter}|{digit}|[^a
 {WS}                ; /* Ignore spaces */
 
 {INVALID} {
-    fprintf(out, "<%d, ERROR, \"Invalid sequence '%s'\">\n", yylineno, yytext);
+    fprintf(out, "<%d, ERROR, \"Invalid '%s'\">\n", yylineno, yytext);
 }
 
-.                   { fprintf(out, "<%d, ERROR, \"Invalid use of character '%s'\">\n", yylineno, yytext); }
+.                   { fprintf(out, "<%d, ERROR, \"Invalid '%s'\">\n", yylineno, yytext); }
 
 %%
 
