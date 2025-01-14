@@ -126,8 +126,6 @@ INVALID_CHAR        ({letter}|_)*({invalid_char}+({letter}|{digit}|_))*
                       fprintf(out, "<%d, ID, %s>\n", index, yytext);
                   }
 
-{STRING}        { fprintf(out, "<STRING, %s>\n", yytext); }
-
 \"([^\"\\\n]|\\[abfnrtv\"\'\\0])*\n {
                       fprintf(out, "<%d, ERROR, \"Unclosed string\">\n", yylineno);
                   }
