@@ -74,7 +74,7 @@ COMMA           [","]
 OPN_PARENT      "\("
 CLS_PARENT      "\)"
 
-INVALID     ({digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=-])*({letter}|{digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*
+INVALID     ({digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*({letter}|{digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*
 
 %%
 
@@ -130,11 +130,13 @@ INVALID     ({digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=-])*({letter}|{digit}|[^a
                       fprintf(out, "<%d, ERROR, \"Unclosed string\">\n", yylineno);
                   }
 
-{WS}                ; /* Ignore spaces */
-
 {INVALID} {
     fprintf(out, "<%d, ERROR, \"Invalid sequence '%s'\">\n", yylineno, yytext);
 }
+
+{WS}                ; /* Ignore spaces */
+
+
 
 .                   { fprintf(out, "<%d, ERROR, \"Invalid use of character '%s'\">\n", yylineno, yytext); }
 
