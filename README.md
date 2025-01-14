@@ -221,7 +221,7 @@ O analisador léxico foi projetado para detectar e relatar diversos tipos de err
      ```
    - **Saída**:
      ```plaintext
-     <4, ERROR, "Invalid use of character '@'">
+     <4, ERROR, "Invalid '@'">
      ```
 
 5. **Identificador Inválido**:
@@ -232,7 +232,7 @@ O analisador léxico foi projetado para detectar e relatar diversos tipos de err
      ```
    - **Saída**:
      ```plaintext
-     <5, ERROR, "Invalid sequence '123$abc'">
+     <5, ERROR, "Invalid '123$abc'">
      ```
 
 ---
