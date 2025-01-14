@@ -31,8 +31,9 @@
 %option yylineno
 %x COMMENT
 
-digit       [0-9]
-letter      [a-zA-Z]
+digit           [0-9]
+letter          [a-zA-Z]
+invalid_char    [^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=_]
 
 ID          ({letter}|_)({letter}|{digit}|_)*
 
@@ -74,7 +75,8 @@ COMMA           [","]
 OPN_PARENT      "\("
 CLS_PARENT      "\)"
 
-INVALID     ({digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=_])*({letter}|{digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=_])*
+ID_STARTS_DIGIT     {digit}({letter}|{digit}|_)+ 
+INVALID_CHAR        ({letter}|_)*({invalid_char}+({letter}|{digit}|_))*
 
 %%
 
@@ -132,9 +134,18 @@ INVALID     ({digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=_])*({letter}|{digit}|[^a
 
 {WS}                ; /* Ignore spaces */
 
-{INVALID} {
-    fprintf(out, "<%d, ERROR, \"Invalid '%s'\">\n", yylineno, yytext);
+{NUM} {
+    fprintf(out, "<NUM, %s>\n", yytext);
 }
+
+{ID_STARTS_DIGIT} {
+    fprintf(out, "<%d, ERROR, \"Invalid identifier starts with digit '%s'\">\n", yylineno, yytext);
+}
+
+{INVALID_CHAR} {
+    fprintf(out, "<%d, ERROR, \"Invalid identifier contains invalid characters '%s'\">\n", yylineno, yytext);
+}
+
 
 .                   { fprintf(out, "<%d, ERROR, \"Invalid '%s'\">\n", yylineno, yytext); }
 
