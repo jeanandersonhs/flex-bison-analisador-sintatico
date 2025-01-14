@@ -49,6 +49,11 @@ RETURN          "return"
 WS          [ \t\r]+
 NL          \n
 
+SUM         ["+"]
+SUB         "\-"
+DIV         ["/"]
+MUL         ["*"]
+
 GT          [">"]
 LT          ["<"]
 EQ          ["="]
@@ -69,7 +74,7 @@ COMMA           [","]
 OPN_PARENT      "\("
 CLS_PARENT      "\)"
 
-INVALID     ({digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*({letter}|{digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*
+INVALID     ({digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=-])*({letter}|{digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*
 
 %%
 
@@ -81,12 +86,19 @@ INVALID     ({digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*({letter}|{digit}|[^a-
 <COMMENT><<EOF>>    { fprintf(out, "<%d, ERROR, \"Unclosed comment\">\n", linha); }
 <COMMENT>.          ; /* Ignorar outros caracteres no comentário */
 
+{SUM}              { fprintf(out, "<OP, SUM, %s>\n", yytext); }
+{SUB}              { fprintf(out, "<OP, SUB, %s>\n", yytext); }
+{DIV}              { fprintf(out, "<OP, DIV, %s>\n", yytext); }
+{MUL}              { fprintf(out, "<OP, MUL, %s>\n", yytext); }
+
 {GT}               { fprintf(out, "<RELOP, GT, %s>\n", yytext); }
 {LT}               { fprintf(out, "<RELOP, LT, %s>\n", yytext); }
 {EQ}               { fprintf(out, "<RELOP, EQ, %s>\n", yytext); }
 {NE}               { fprintf(out, "<RELOP, NE, %s>\n", yytext); }
 {GE}               { fprintf(out, "<RELOP, GE, %s>\n", yytext); }
 {LE}               { fprintf(out, "<RELOP, LE, %s>\n", yytext); }
+{COMP_EQ}          { fprintf(out, "<RELOP, COMP_EQ, %s>\n", yytext); }
+
 
 {OPN_SQR_BKT}     { fprintf(out, "<SYM, OPN_SQR_BKT, %s>\n", yytext); }
 {CLS_SQR_BKT}     { fprintf(out, "<SYM, CLS_SQR_BKT, %s>\n", yytext); }
@@ -98,7 +110,6 @@ INVALID     ({digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*({letter}|{digit}|[^a-
 {OPN_PARENT}      { fprintf(out, "<SYM, OPN_PARENT, %s>\n", yytext); }
 {CLS_PARENT}      { fprintf(out, "<SYM, CLS_PARENT, %s>\n", yytext); }
 
-"+"|"-"|"*"|"/"    { fprintf(out, "<OP, %s>\n", yytext); }
 
 {FLOAT}            { fprintf(out, "<KEY, FLOAT, %s>\n", yytext); }
 {INT}              { fprintf(out, "<KEY, INT, %s>\n", yytext); }
