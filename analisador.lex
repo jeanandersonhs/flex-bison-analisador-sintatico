@@ -57,6 +57,8 @@ GE          ">="
 LE          "<="
 COMP_EQ     "=="
 
+INVALID     ({digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*({letter}|{digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*
+
 STRING      \"([^\"\\\n]|\\[abfnrtv\"\'\\0])*\"
 
 OPN_SQR_BKT     "\["
@@ -69,8 +71,6 @@ COMMA           [","]
 OPN_PARENT      "\("
 CLS_PARENT      "\)"
 
-INVALID     ({digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*({letter}|{digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*
-
 %%
 
 {NL}                { linha = yylineno; }
@@ -81,6 +81,7 @@ INVALID     ({digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*({letter}|{digit}|[^a-
 <COMMENT><<EOF>>    { fprintf(out, "<%d, ERROR, \"Unclosed comment\">\n", linha); }
 <COMMENT>.          ; /* Ignorar outros caracteres no comentário */
 
+{NUM}               {fprintf(out, "<NUM, %s>\n", yytext); }
 {GT}               { fprintf(out, "<RELOP, GT, %s>\n", yytext); }
 {LT}               { fprintf(out, "<RELOP, LT, %s>\n", yytext); }
 {EQ}               { fprintf(out, "<RELOP, EQ, %s>\n", yytext); }
@@ -119,11 +120,13 @@ INVALID     ({digit}|[^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=])*({letter}|{digit}|[^a-
                       fprintf(out, "<%d, ERROR, \"Unclosed string\">\n", yylineno);
                   }
 
-{WS}                ; /* Ignore spaces */
-
 {INVALID} {
     fprintf(out, "<%d, ERROR, \"Invalid sequence '%s'\">\n", yylineno, yytext);
 }
+
+{WS}                ; /* Ignore spaces */
+
+
 
 .                   { fprintf(out, "<%d, ERROR, \"Invalid use of character '%s'\">\n", yylineno, yytext); }
 
