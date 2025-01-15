@@ -35,10 +35,11 @@ digit           [0-9]
 letter          [a-zA-Z]
 invalid_char    [^a-zA-Z0-9 \n\t\r\[\]\(\)\{\};:,=_]
 
+float       {digit}+\.{digit}+
+num         {digit}+
+
 ID          ({letter}|_)({letter}|{digit}|_)*
 
-FLOAT       {digit}+\.{digit}+([eE][-+]?{digit}+)?
-NUM         {digit}+
 
 INT             "int"
 VOID            "void"
@@ -46,6 +47,8 @@ IF              "if"
 ELSE            "else"
 WHILE           "while"
 RETURN          "return"
+FLOAT           "float"
+
 
 WS          [ \t\r]+
 NL          \n
@@ -75,8 +78,9 @@ COMMA           [","]
 OPN_PARENT      "\("
 CLS_PARENT      "\)"
 
-ID_STARTS_DIGIT     {digit}({letter}|{digit}|_)+ 
-INVALID_CHAR        ({letter}|_)*({invalid_char}+({letter}|{digit}|_))*
+ID_STARTS_W_DIGIT     ({digit})+({letter})+({letter}|{digit}|_)+ 
+INVALID_CHAR          ({letter}|{digit}|_)*({invalid_char})+({letter}|{digit}|_)+ 
+
 
 %%
 
@@ -126,17 +130,23 @@ INVALID_CHAR        ({letter}|_)*({invalid_char}+({letter}|{digit}|_))*
                       fprintf(out, "<%d, ID, %s>\n", index, yytext);
                   }
 
+{STRING}        { fprintf(out, "<STRING, %s>\n", yytext); }
+
 \"([^\"\\\n]|\\[abfnrtv\"\'\\0])*\n {
                       fprintf(out, "<%d, ERROR, \"Unclosed string\">\n", yylineno);
                   }
 
 {WS}                ; /* Ignore spaces */
 
-{NUM} {
+{float} {
+    fprintf(out, "<FLOAT, %s>\n", yytext);
+}
+
+{num} {
     fprintf(out, "<NUM, %s>\n", yytext);
 }
 
-{ID_STARTS_DIGIT} {
+{ID_STARTS_W_DIGIT} {
     fprintf(out, "<%d, ERROR, \"Invalid identifier starts with digit '%s'\">\n", yylineno, yytext);
 }
 

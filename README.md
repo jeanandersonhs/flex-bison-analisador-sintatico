@@ -133,27 +133,27 @@ O analisador reconhece e gera tokens para:
 
 1. **Declarações de variáveis**:
    - `int x = 5;`
-   - Token: `<KEY, int>`, `<1, ID, x>`, `<SYM, =>`, `<NUM, 5>`.
+   - Token: `<KEY, INT, int>`, `<1, ID, x>`, `<RELOP, EQ, =>`, `<NUM, 5>`.
 
 2. **Vetores**:
    - `float arr[10]; arr[0] = 1.5;`
-   - Tokens: `<KEY, float>`, `<1, ID, arr>`, `<SYM, [>`, `<NUM, 10>`, `<SYM, ]>`...
+   - Tokens: `<KEY, float>`, `<1, ID, arr>`, `<SYM, OPN_SQR_BKT, [>`, `<NUM, 10>`, `<SYM, CLS_SQR_BKT, ]>`... `<FLOAT, 1.5>` ...
 
 3. **Expressões aritméticas**:
    - `b = a + 2 * 3;`
-   - Tokens: `<1, ID, b>`, `<SYM, =>`, `<1, ID, a>`, `<OP, +>`, `<NUM, 2>`, `<OP, *>`, `<NUM, 3>`.
+   - Tokens: `<1, ID, b>`, `<RELOP, EQ, =>`, `<1, ID, a>`, `<OP, SUM, +>`, `<NUM, 2>`, `<OP, MUL, *>`, `<NUM, 3>`, `<SYM, SEMICOLON, ;>`
 
 4. **Desvios condicionais**:
    - `if (a > b) { return 0 }`
-   - Tokens: `<KEY, if>`, `<SYM, (>`, `<1, ID, a>`, `<RELOP, >>`, `<2, ID, b>`, `<SYM, )>`...
+   - Tokens: `<KEY, IF, if>`, `<SYM, OPN_PARENT, (>`, `<1, ID, a>`, `<RELOP, GT, >>`, `<2, ID, b>`, `<SYM, CLS_PARENT, )>`...
 
 5. **Laços de repetição**:
    - `while (x < 10) { x = x + 1 }`
-   - Tokens: `<KEY, while>`, `<SYM, (>`, `<1, ID, x>`, `<RELOP, <>`, `<NUM, 10>`, `<SYM, )>`...
+   - Tokens: `<KEY, WHILE, while>`, `<SYM, OPN_PARENT (>`, `<1, ID, x>`, `<RELOP, LT, <>`, `<NUM, 10>`, `<SYM, CLS_PARENT )>`...
 
 6. **Funções**:
    - `float soma(float a, float b) { return a + b; }`
-   - Tokens: `<KEY, float>`, `<1, ID, soma>`, `...`, `<KEY, return>`, ...
+   - Tokens: `<KEY, FLOAT, float>`, `<1, ID, soma>`, `...`, `<KEY, RETURN, return>`, ...
 
 ---
 
