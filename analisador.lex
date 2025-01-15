@@ -79,7 +79,7 @@ OPN_PARENT      "\("
 CLS_PARENT      "\)"
 
 ID_STARTS_W_DIGIT     ({digit})+({letter})+({letter}|{digit}|_)+ 
-INVALID_CHAR          ({letter}|{digit}|_)*({invalid_char})+({letter}|{digit}|_)+ 
+INVALID_CHAR          (({letter}|{digit}|_)*({invalid_char})+({letter}|{digit}|_)+)*
 
 
 %%

@@ -29,9 +29,9 @@ float soma(float a, float b) {
 y = soma(x, 5.0);
 
 /* Casos especiais */ 
-string mensagem = "Teste de string com escape: \\n Nova linha";
+mensage33m = "Teste de string com escape: \\n Nova linha";
 print(mensagem);
 
-/* Erros Léxicos */ 
+/* Erros Léxicos */
 @erro_simbolo_inválido;
 "string_nao_fechada
