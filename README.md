@@ -1,4 +1,4 @@
-# Analisador Léxico - Subconjunto da Linguagem C
+# Analisador sintatica com FLEX E BISON - Subconjunto da Linguagem C
 
 ## Tabela de Conteúdos
 
