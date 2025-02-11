@@ -18,10 +18,13 @@ void yyerror(const char *s);
 }
 
 %token <id> ID NUM RELOP
-%token INT FLOAT IF ELSE WHILE
-%token ASSIGN SEMICOLON LPAREN RPAREN LBRACE RBRACE
+%token INT FLOAT IF ELSE WHILE RETURN VOID
+%token SUM SUB DIV MUL GT LT EQ NE GE LE COMP_EQ
+%token OPN_SQR_BKT CLS_SQR_BKT OPN_CURLY_BKT CLS_CURLY_BKT SEMICOLON COLON COMMA OPN_PARENT CLS_PARENT
+%token STRING
 
-%type <node> program statement statement_list expression attribution if_statement type declaration condition
+
+%type <node> program statement_list statement declaration attribution if_statement type condition expression
 
 %start program
 
@@ -40,10 +43,15 @@ statement:
     attribution { $$ = create_node("statement", 1, $1); }
     | if_statement { $$ = create_node("statement", 1, $1); }
     | declaration { $$ = create_node("statement", 1, $1); }
+    | while_statement { $$ = create_node("statement", 1, $1); }
+    | function_statement { $$ = create_node("statement", 1, $1); }
+    | function_call { $$ = create_node("statement", 1, $1); }
+    | return_statement { $$ = create_node("statement", 1, $1); } // 
     ;
 
 declaration:
     type ID SEMICOLON { $$ = create_node("declaration", 2, $1, create_node($2, 0)); }
+    | type ID OPN_SQR_BKT NUM CLS_SQR_BKT SEMICOLON { $$ = create_node("declaration", 3, $1, create_node($2, 0), create_node($4, 0)); } // int id[num]; 
     ;
 
 type:
@@ -52,19 +60,54 @@ type:
     ;
 
 attribution:
-    ID ASSIGN expression SEMICOLON { $$ = create_node("attribution", 2, create_node($1, 0), $3); }
+    ID EQ expression SEMICOLON { $$ = create_node("attribution", 2, create_node($1, 0), $3); }
+    ID OPN_SQR_BKT expression CLS_SQR_BKT EQ expression SEMICOLON { $$ = create_node("attribution", 3, create_node($1, 0), $3, $6); } // id[num] = expression;
     ;
 
 if_statement:
-    IF LPAREN condition RPAREN LBRACE statement_list RBRACE ELSE LBRACE statement_list RBRACE { $$ = create_node("if_statement", 3, $3, $6, $10); }
-    | IF LPAREN condition RPAREN LBRACE statement_list RBRACE { $$ = create_node("if_statement", 2, $3, $6); }
+    IF OPN_PARENT condition CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT ELSE OPN_CURLY_BKT statement_list CLS_CURLY_BKT { $$ = create_node("if_statement", 3, $3, $6, $10); }
+    | IF OPN_PARENT condition CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT { $$ = create_node("if_statement", 2, $3, $6); }
+    ;
+
+while_statement:
+    WHILE OPN_PARENT condition CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT { $$ = create_node("while_statement", 2, $3, $6); }
+    ;
+
+function_statement:
+    type ID OPN_PARENT declaration CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT { $$ = create_node("function_statement", 3, $1, create_node($2, 0), $4, $7); }
+    | VOID ID OPN_PARENT CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT { $$ = create_node("function_statement", 2, create_node("VOID", 0), create_node($2, 0), $5); }
+
+function_call:
+    ID OPN_PARENT CLS_PARENT SEMICOLON { $$ = create_node("function_call", 1, create_node($1, 0)); }
+    | ID OPN_PARENT expression CLS_PARENT SEMICOLON { $$ = create_node("function_call", 2, create_node($1, 0), $3); }
     ;
 condition:
     expression RELOP expression { $$ = create_node("condition", 3, $1, create_node("relop",1,create_node($2,0)),$3); }
 
+RELOP:
+    GT { $$ = create_node("GT", 0); }
+    | LT { $$ = create_node("LT", 0); }
+    | EQ { $$ = create_node("EQ", 0); }
+    | NE { $$ = create_node("NE", 0); }
+    | GE { $$ = create_node("GE", 0); }
+    | LE { $$ = create_node("LE", 0); }
+    | COMP_EQ { $$ = create_node("COMP_EQ", 0); }
+    ;
 expression:
     NUM { $$ = create_node($1, 0); }
     | ID { $$ = create_node($1, 0); }
+    | expression OP expression { $$ = create_node("expression", 3, $1, create_node("+", 0), $3); }
+  
+
+OP:
+    SUM { $$ = create_node("SUM", 0); }
+    | SUB { $$ = create_node("SUB", 0); }
+    | DIV { $$ = create_node("DIV", 0); }
+    | MUL { $$ = create_node("MUL", 0); }
+    ;
+
+return_statement:
+    RETURN expression SEMICOLON { $$ = create_node("return_statement", 1, $2); }
     ;
 
 %%
