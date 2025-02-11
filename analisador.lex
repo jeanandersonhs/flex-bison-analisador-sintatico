@@ -84,7 +84,7 @@ CLS_PARENT      "\)"
 ID_STARTS_W_DIGIT     ({digit})+({letter})+({letter}|{digit}|_)+ 
 INVALID_CHAR          (({letter}|{digit}|_)*({invalid_char})+({letter}|{digit}|_)+)*
 
-
+/* Regras de produção */
 %%
 
 {NL}                { linha = yylineno; }
@@ -166,33 +166,33 @@ int yywrap() {
     return 1;
 }
 
-int main(int argc, char *argv[]) {
-    FILE *arquivo;
-    if (argc < 3) {
-        fprintf(stderr, "Usage: %s <input_file> <output_file>\n", argv[0]);
-        return 1;
-    }
-    arquivo = fopen(argv[1], "r");
-    if (!arquivo) {
-        fprintf(stderr, "Error: Cannot open input file %s\n", argv[1]);
-        return 1;
-    }
-    yyin = arquivo;
-    out = fopen(argv[2], "w");
-    if (!out) {
-        fprintf(stderr, "Error: Cannot open output file %s\n", argv[2]);
-        fclose(arquivo);
-        return 1;
-    }
-    yylex();
+// int main(int argc, char *argv[]) {
+//     FILE *arquivo;
+//     if (argc < 3) {
+//         fprintf(stderr, "Usage: %s <input_file> <output_file>\n", argv[0]);
+//         return 1;
+//     }
+//     arquivo = fopen(argv[1], "r");
+//     if (!arquivo) {
+//         fprintf(stderr, "Error: Cannot open input file %s\n", argv[1]);
+//         return 1;
+//     }
+//     yyin = arquivo;
+//     out = fopen(argv[2], "w");
+//     if (!out) {
+//         fprintf(stderr, "Error: Cannot open output file %s\n", argv[2]);
+//         fclose(arquivo);
+//         return 1;
+//     }
+//     yylex();
     
-    // Imprimir a tabela de símbolos no final
-    fprintf(out, "\nTabela de Símbolos:\n");
-    for (int i = 0; i < symbol_count; i++) {
-        fprintf(out, "<%d, %s>\n", symbol_table[i].index, symbol_table[i].id);
-    }
+//     // Imprimir a tabela de símbolos no final
+//     fprintf(out, "\nTabela de Símbolos:\n");
+//     for (int i = 0; i < symbol_count; i++) {
+//         fprintf(out, "<%d, %s>\n", symbol_table[i].index, symbol_table[i].id);
+//     }
 
-    fclose(arquivo);
-    fclose(out);
-    return 0;
-}
+//     fclose(arquivo);
+//     fclose(out);
+//     return 0;
+// }
