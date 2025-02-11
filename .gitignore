@@ -1,4 +1,4 @@
-paser.tab.h
+parser.tab.h
 parser.tab.c
 analisador
 lex.yy.c
