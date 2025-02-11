@@ -73,8 +73,9 @@ sudo apt-get install flex
 Use o comando abaixo para gerar o analisador léxico:
 
 ```bash
+bison -d parser.y
 flex analisador.lex
-gcc lex.yy.c -o analisador
+gcc parser.tab.c lex.yy.c -o analisador -lfl -ly
 ```
 
 ### 2. Executar o Analisador
