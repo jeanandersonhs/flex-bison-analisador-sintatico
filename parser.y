@@ -43,6 +43,9 @@ statement:
     attribution { $$ = create_node("statement", 1, $1); }
     | if_statement { $$ = create_node("statement", 1, $1); }
     | declaration { $$ = create_node("statement", 1, $1); }
+    | while_statement { $$ = create_node("statement", 1, $1); }
+    | function_statement { $$ = create_node("statement", 1, $1); }
+    | function_call { $$ = create_node("statement", 1, $1); }
     | return_statement { $$ = create_node("statement", 1, $1); } // 
     ;
 
@@ -65,16 +68,42 @@ if_statement:
     IF OPN_PARENT condition CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT ELSE OPN_CURLY_BKT statement_list CLS_CURLY_BKT { $$ = create_node("if_statement", 3, $3, $6, $10); }
     | IF OPN_PARENT condition CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT { $$ = create_node("if_statement", 2, $3, $6); }
     ;
+
+while_statement:
+    WHILE OPN_PARENT condition CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT { $$ = create_node("while_statement", 2, $3, $6); }
+    ;
+
+function_statement:
+    type ID OPN_PARENT declaration CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT { $$ = create_node("function_statement", 3, $1, create_node($2, 0), $4, $7); }
+    | VOID ID OPN_PARENT CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT { $$ = create_node("function_statement", 2, create_node("VOID", 0), create_node($2, 0), $5); }
+
+function_call:
+    ID OPN_PARENT CLS_PARENT SEMICOLON { $$ = create_node("function_call", 1, create_node($1, 0)); }
+    | ID OPN_PARENT expression CLS_PARENT SEMICOLON { $$ = create_node("function_call", 2, create_node($1, 0), $3); }
+    ;
 condition:
     expression RELOP expression { $$ = create_node("condition", 3, $1, create_node("relop",1,create_node($2,0)),$3); }
 
+RELOP:
+    GT { $$ = create_node("GT", 0); }
+    | LT { $$ = create_node("LT", 0); }
+    | EQ { $$ = create_node("EQ", 0); }
+    | NE { $$ = create_node("NE", 0); }
+    | GE { $$ = create_node("GE", 0); }
+    | LE { $$ = create_node("LE", 0); }
+    | COMP_EQ { $$ = create_node("COMP_EQ", 0); }
+    ;
 expression:
     NUM { $$ = create_node($1, 0); }
     | ID { $$ = create_node($1, 0); }
-    | expression SUM expression { $$ = create_node("expression", 3, $1, create_node("+", 0), $3); }
-    | expression SUB expression { $$ = create_node("expression", 3, $1, create_node("-", 0), $3); }
-    | expression MUL expression { $$ = create_node("expression", 3, $1, create_node("*", 0), $3); }
-    | expression DIV expression { $$ = create_node("expression", 3, $1, create_node("/", 0), $3); }
+    | expression OP expression { $$ = create_node("expression", 3, $1, create_node("+", 0), $3); }
+  
+
+OP:
+    SUM { $$ = create_node("SUM", 0); }
+    | SUB { $$ = create_node("SUB", 0); }
+    | DIV { $$ = create_node("DIV", 0); }
+    | MUL { $$ = create_node("MUL", 0); }
     ;
 
 return_statement:
