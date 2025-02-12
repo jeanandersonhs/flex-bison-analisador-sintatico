@@ -22,11 +22,14 @@ void yyerror(const char *s);
 %token <value> OPN_PARENT CLS_PARENT OPN_SQR_BKT CLS_SQR_BKT
 %token <value> OPN_CURLY_BKT CLS_CURLY_BKT SEMICOLON COMMA COLON
 
+%nonassoc LOWER_THAN_ELSE
+%nonassoc ELSE
+
 %type <node> program statement_list statement declaration type
 %type <node> attribution expression condition if_statement
 %type <node> while_statement function_decl parameters return_statement
 %type <node> array_access variable
-%type <node> array_decl term factor
+%type <node> array_decl term factor argument_list block
 
 %start program
 
@@ -37,7 +40,6 @@ program:
     | function_decl program                 { $$ = create_node("program", 2, $1, $2); root = $$; }
     | statement_list                        { $$ = create_node("program", 1, $1); root = $$; }
     ;
-
 
 function_decl:
     type ID OPN_PARENT parameters CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT {
@@ -57,11 +59,13 @@ statement_list:
     ;
 
 statement:
-    declaration SEMICOLON { $$ = create_node("statement", 1, $1); }
-    | attribution SEMICOLON { $$ = create_node("statement", 1, $1); }
-    | if_statement { $$ = create_node("statement", 1, $1); }
-    | while_statement { $$ = create_node("statement", 1, $1); }
-    | return_statement SEMICOLON { $$ = create_node("statement", 1, $1); }
+        block { $$ = $1; }
+    | declaration SEMICOLON          { $$ = create_node("statement", 1, $1); }
+    | attribution SEMICOLON        { $$ = create_node("statement", 1, $1); }
+    | if_statement                 { $$ = create_node("statement", 1, $1); }
+    | while_statement              { $$ = create_node("statement", 1, $1); }
+    | return_statement SEMICOLON   { $$ = create_node("statement", 1, $1); }
+    | expression SEMICOLON         { $$ = create_node("statement", 1, $1); }
     ;
 
 declaration:
@@ -105,11 +109,22 @@ term:
     | factor { $$ = $1; }
     ;
 
+argument_list:
+      /* empty */            { $$ = create_node("arguments", 0); }
+    | expression             { $$ = create_node("arguments", 1, $1); }
+    | argument_list COMMA expression
+                              { $$ = create_node("arguments", 2, $1, $3); }
+    ;
+
 factor:
-    NUM { $$ = create_node("number", 1, create_node($1, 0)); }
-    | FLOAT_NUM { $$ = create_node("float", 1, create_node($1, 0)); }
-    | variable { $$ = $1; }
-    | OPN_PARENT expression CLS_PARENT { $$ = $2; }
+      NUM                     { $$ = create_node("number", 1, create_node($1, 0)); }
+    | FLOAT_NUM               { $$ = create_node("float", 1, create_node($1, 0)); }
+    | STRING                  { $$ = create_node("string", 1, create_node($1, 0)); }
+    | ID OPN_PARENT argument_list CLS_PARENT
+                              { $$ = create_node("call", 2, create_node($1, 0), $3); }
+    | variable                { $$ = $1; }
+    | OPN_PARENT expression CLS_PARENT
+                              { $$ = $2; }
     ;
 
 condition:
@@ -121,13 +136,15 @@ condition:
     | expression GE expression { $$ = create_node("condition", 3, $1, create_node(">=", 0), $3); }
     ;
 
+block:
+    OPN_CURLY_BKT statement_list CLS_CURLY_BKT { $$ = create_node("block", 1, $2); }
+    ;
+
 if_statement:
-    IF OPN_PARENT condition CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT ELSE OPN_CURLY_BKT statement_list CLS_CURLY_BKT {
-        $$ = create_node("if", 4, $3, $6, create_node("else", 0), $10);
-    }
-    | IF OPN_PARENT condition CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT {
-        $$ = create_node("if", 2, $3, $6);
-    }
+      IF OPN_PARENT condition CLS_PARENT statement %prec LOWER_THAN_ELSE
+          { $$ = create_node("if", 2, $3, $5); }
+    | IF OPN_PARENT condition CLS_PARENT statement ELSE statement
+          { $$ = create_node("if", 3, $3, $5, $7); }
     ;
 
 while_statement:
