@@ -31,14 +31,24 @@ void yyerror(const char *s);
 %type <node> array_access variable
 %type <node> array_decl term factor argument_list block
 
+%type <node> top_level_item_list top_level_item
+
 %start program
 
 %%
 
 program:
-      function_decl                         { $$ = create_node("program", 1, $1); root = $$; }
-    | function_decl program                 { $$ = create_node("program", 2, $1, $2); root = $$; }
-    | statement_list                        { $$ = create_node("program", 1, $1); root = $$; }
+      top_level_item_list { $$ = create_node("program", 1, $1); root = $$; }
+    ;
+
+top_level_item_list:
+      top_level_item { $$ = create_node("top_level_item_list", 1, $1); }
+    | top_level_item_list top_level_item { $$ = create_node("top_level_item_list", 2, $1, $2); }
+    ;
+
+top_level_item:
+      function_decl { $$ = $1; }
+    | statement { $$ = $1; }
     ;
 
 function_decl:
