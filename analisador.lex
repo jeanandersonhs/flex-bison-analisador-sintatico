@@ -95,45 +95,48 @@ INVALID_CHAR          (({letter}|{digit}|_)*({invalid_char})+({letter}|{digit}|_
 <COMMENT><<EOF>>    { fprintf(out, "<%d, ERROR, \"Unclosed comment\">\n", linha); }
 <COMMENT>.          ; /* Ignorar outros caracteres no comentário */
 
-{SUM}              { fprintf(out, "<OP, SUM, %s>\n", yytext); }
-{SUB}              { fprintf(out, "<OP, SUB, %s>\n", yytext); }
-{DIV}              { fprintf(out, "<OP, DIV, %s>\n", yytext); }
-{MUL}              { fprintf(out, "<OP, MUL, %s>\n", yytext); }
+{SUM}              { return SUM; }
+{SUB}              { return SUB; }
+{DIV}              { return DIV; }
+{MUL}              { return MUL; }
 
-{GT}               { fprintf(out, "<RELOP, GT, %s>\n", yytext); }
-{LT}               { fprintf(out, "<RELOP, LT, %s>\n", yytext); }
-{EQ}               { fprintf(out, "<RELOP, EQ, %s>\n", yytext); }
-{NE}               { fprintf(out, "<RELOP, NE, %s>\n", yytext); }
-{GE}               { fprintf(out, "<RELOP, GE, %s>\n", yytext); }
-{LE}               { fprintf(out, "<RELOP, LE, %s>\n", yytext); }
-{COMP_EQ}          { fprintf(out, "<RELOP, COMP_EQ, %s>\n", yytext); }
+{GT}               { return GT; }
+{LT}               { return LT; }
+{EQ}               { return EQ; }
+{NE}               { return NE; }
+{GE}               { return GE; }
+{LE}               { return LE; }
+{COMP_EQ}          { return COMP_EQ; }
 
+{OPN_SQR_BKT}     { return OPN_SQR_BKT; }
+{CLS_SQR_BKT}     { return CLS_SQR_BKT; }
+{OPN_CURLY_BKT}   { return OPN_CURLY_BKT; }
+{CLS_CURLY_BKT}   { return CLS_CURLY_BKT; }
+{SEMICOLON}       { return SEMICOLON; }
+{COLON}           { return COLON; }
+{COMMA}           { return COMMA; }
+{OPN_PARENT}      { return OPN_PARENT; }
+{CLS_PARENT}      { return CLS_PARENT; }
 
-{OPN_SQR_BKT}     { fprintf(out, "<SYM, OPN_SQR_BKT, %s>\n", yytext); }
-{CLS_SQR_BKT}     { fprintf(out, "<SYM, CLS_SQR_BKT, %s>\n", yytext); }
-{OPN_CURLY_BKT}   { fprintf(out, "<SYM, OPN_CURLY_BKT, %s>\n", yytext); }
-{CLS_CURLY_BKT}   { fprintf(out, "<SYM, CLS_CURLY_BKT, %s>\n", yytext); }
-{SEMICOLON}       { fprintf(out, "<SYM, SEMICOLON, %s>\n", yytext); }
-{COLON}           { fprintf(out, "<SYM, COLON, %s>\n", yytext); }
-{COMMA}           { fprintf(out, "<SYM, COMMA, %s>\n", yytext); }
-{OPN_PARENT}      { fprintf(out, "<SYM, OPN_PARENT, %s>\n", yytext); }
-{CLS_PARENT}      { fprintf(out, "<SYM, CLS_PARENT, %s>\n", yytext); }
+{FLOAT}           { return FLOAT; }
+{INT}             { return INT; }
+{VOID}            { return VOID; }
+{IF}              { return IF; }
+{ELSE}            { return ELSE; }
+{WHILE}           { return WHILE; }
+{RETURN}          { return RETURN; }
 
-
-{FLOAT}            { fprintf(out, "<KEY, FLOAT, %s>\n", yytext); }
-{INT}              { fprintf(out, "<KEY, INT, %s>\n", yytext); }
-{VOID}             { fprintf(out, "<KEY, VOID, %s>\n", yytext); }
-{IF}               { fprintf(out, "<KEY, IF, %s>\n", yytext); }
-{ELSE}             { fprintf(out, "<KEY, ELSE, %s>\n", yytext); }
-{WHILE}            { fprintf(out, "<KEY, WHILE, %s>\n", yytext); }
-{RETURN}           { fprintf(out, "<KEY, RETURN, %s>\n", yytext); }
-
-{ID}                {
+{ID}              {
                       int index = insert_symbol(yytext);
-                      fprintf(out, "<%d, ID, %s>\n", index, yytext);
+                      //fprintf(out, "<%d, ID, %s>\n", index, yytext);
+                        yylval.id = strdup(yytext);
+                        return ID;
                   }
 
-{STRING}        { fprintf(out, "<STRING, %s>\n", yytext); }
+{STRING}        { //fprintf(out, "<STRING, %s>\n", yytext); 
+                    yylval.id = strdup(yytext);
+                    return STRING;
+                }
 
 \"([^\"\\\n]|\\[abfnrtv\"\'\\0])*\n {
                       fprintf(out, "<%d, ERROR, \"Unclosed string\">\n", yylineno);
@@ -142,23 +145,26 @@ INVALID_CHAR          (({letter}|{digit}|_)*({invalid_char})+({letter}|{digit}|_
 {WS}                ; /* Ignore spaces */
 
 {float} {
-    fprintf(out, "<FLOAT, %s>\n", yytext);
+    // fprintf(out, "<FLOAT, %s>\n", yytext);
+    yylval.id = strup(yytext); return float;
 }
 
 {num} {
-    fprintf(out, "<NUM, %s>\n", yytext);
+    //fprintf(out, "<NUM, %s>\n", yytext);
+    yylval.num = strup(yytext);
+    return NUM;
 }
 
 {ID_STARTS_W_DIGIT} {
-    fprintf(out, "<%d, ERROR, \"Invalid identifier starts with digit '%s'\">\n", yylineno, yytext);
+    fprintf(out, "<%d, ERROR, \"Invalid identifier starts with digit '%s'\">\n", yylineno, yytext); return ERROR;
 }
 
 {INVALID_CHAR} {
-    fprintf(out, "<%d, ERROR, \"Invalid identifier contains invalid characters '%s'\">\n", yylineno, yytext);
+    fprintf(out, "<%d, ERROR, \"Invalid identifier contains invalid characters '%s'\">\n", yylineno, yytext); return ERROR;
 }
 
 
-.                   { fprintf(out, "<%d, ERROR, \"Invalid character '%s'\">\n", yylineno, yytext); }
+.                   { fprintf(out, "<%d, ERROR, \"Invalid character '%s'\">\n", yylineno, yytext); return ERROR; }
 
 %%
 
