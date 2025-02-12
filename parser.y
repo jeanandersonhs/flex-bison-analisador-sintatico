@@ -20,18 +20,16 @@ void yyerror(const char *s);
 %token <id> ID NUM 
 %token INT FLOAT IF ELSE WHILE RETURN VOID
 %token SUM SUB DIV MUL GT LT EQ NE GE LE COMP_EQ
-%token OPN_SQR_BKT CLS_SQR_BKT OPN_CURLY_BKT CLS_CURLY_BKT SEMICOLON COLON COMMA OPN_PARENT CLS_PARENT
+%token OPN_SQR_BKT CLS_SQR_BKT OPN_CURLY_BKT CLS_CURLY_BKT SEMICOLON COLON COMMA OPN_PARENT CLS_PARENT COMMA
 %token STRING
 
 
-%type <node> program statement_list statement declaration attribution if_statement type condition expression param_list param expression_list  
-%type <node> while_statement function_statement function_call return_statement relop OP    
+%type <node> program statement_list statement declaration type attribution if_statement condition expression parameters param_list param arguments  arguments_list argument
+%type <node> while_statement function function_statement_list function_statement function_call return_statement relop OP    
 
-%left SUM SUB
+
 %left MUL DIV
-%nonassoc IF
-%nonassoc ELSE
-%right EQ
+
 
 %start program
 
@@ -51,7 +49,9 @@ statement:
     | if_statement { $$ = create_node("statement", 1, $1); }
     | declaration { $$ = create_node("statement", 1, $1); }
     | while_statement { $$ = create_node("statement", 1, $1); }
-    | function_statement { $$ = create_node("statement", 1, $1); }
+    | function { $$ = create_node("statement", 1, $1); }
+    | function_statement_list { $$ = create_node("statement", 1, $1); }
+    | function_statament { $$ = create_node("statement", 1, $1); }
     | function_call { $$ = create_node("statement", 1, $1); }
     | return_statement { $$ = create_node("statement", 1, $1); } // 
     ;
@@ -60,15 +60,6 @@ declaration:
     type ID SEMICOLON { $$ = create_node("declaration", 2, $1, create_node($2, 0)); }
     | type ID OPN_SQR_BKT NUM CLS_SQR_BKT { $$ = create_node("array_declaration", 3, $1, create_node($2, 0), create_node($4, 0)); }
     ;
-
-param_list:
-param { $$ = create_node("param_list", 1, $1); }
-| param_list COMMA param { $$ = create_node("param_list", 2, $1, $3); }
-;
-
-param:
-declaration { $$ = $1; }
-;
 
 type:
     INT { $$ = create_node("INT", 0); }
@@ -82,7 +73,7 @@ attribution:
     ;
 
 if_statement:
-IF OPN_PARENT condition CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT %prec IF {$$ = create_node("if_statement", 2, $3, $6);}
+IF OPN_PARENT condition CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT {$$ = create_node("if_statement", 2, $3, $6);}
 | IF OPN_PARENT condition CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT ELSE OPN_CURLY_BKT statement_list CLS_CURLY_BKT {$$ = create_node("if_else_statement", 3, $3, $6, $10);}
 ;
 
@@ -90,20 +81,53 @@ while_statement:
     WHILE OPN_PARENT condition CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT { $$ = create_node("while_statement", 2, $3, $6); }
     ;
 
-function_statement:
-    type ID OPN_PARENT param_list CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT { $$ = create_node("function_statement", 4, $1, create_node($2, 0), $4, $7); }
-    | type ID OPN_PARENT CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT { $$ = create_node("function_statement", 3, create_node("VOID", 0), create_node($2, 0), $6); }
+function:
+    type ID OPN_PARENT parameters CLS_PARENT OPN_CURLY_BKT funtion_statement_list CLS_CURLY_BKT { $$ = create_node("function", 4, $1, create_node($2, 0), $4, $7); }
     ;
+function_statement_list:
+    function_statement_list function_statement { $$ = create_node("function_statement_list", 2, $1, $2); }
+    | function_statement { $$ = create_node("function_statement_list", 1, $1); }
+    ;
+
+function_statement:
+    declaration
+    | attribution
+    | if_statement
+    | while_statement
+    |function
+    |function_call
+    |return_statement
 
 function_call:
-    ID OPN_PARENT CLS_PARENT SEMICOLON { $$ = create_node("function_call", 1, create_node($1, 0)); }
-    | ID OPN_PARENT expression_list CLS_PARENT SEMICOLON { $$ = create_node("function_call", 2, create_node($1, 0), $3); }
+    ID OPN_PARENT arguments CLS_PARENT { $$ = create_node("function_call", 1, create_node($1, 0)); }
     ;
 
-expression_list:
-expression { $$ = create_node("expression_list", 1, $1); }
-| expression_list COMMA expression { $$ = create_node("expression_list", 2, $1, $3); }
-;
+parameters:
+    /* empty */ { $$ = create_node("parameters", 0); }
+    | param_list { $$ = create_node("parameters", 1, $1); }
+    ;
+
+param_list:
+    param { $$ = create_node("parameters_list", 1, $1); }
+    | param_list COMMA param { $$ = create_node("parameters_list", 2, $1, $3); }
+    ;
+param:
+    type ID { $$ = create_node("param", 2, $1, create_node($2, 0)); }
+    ;
+
+arguments:
+    /* empty */ { $$ = create_node("arguments", 0); }
+    | arguments_list { $$ = create_node("arguments-list", 1, $1); }
+    ;
+
+arguments_list:
+    argument { $$ = create_node("arguments_list", 1, $1); }
+    | arguments_list COMMA argument { $$ = create_node("arguments_list", 2, $1, $3); }
+    ;
+
+argument:
+    expression { $$ = create_node("argument", 1, $1); }
+    ;
 
 condition:
     expression relop expression { $$ = create_node("condition", 3, $1, create_node("relop",1,create_node($2,0)),$3); }
