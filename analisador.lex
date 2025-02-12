@@ -125,6 +125,7 @@ INVALID_CHAR          (({letter}|{digit}|_)*({invalid_char})+({letter}|{digit}|_
 {ELSE}            { return ELSE; }
 {WHILE}           { return WHILE; }
 {RETURN}          { return RETURN; }
+","              { return COMMA; }
 
 {ID}              {
                       int index = insert_symbol(yytext);
