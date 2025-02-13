@@ -1,37 +1,22 @@
-/* Declaração de variáveis */ 
-int x = 10;
-float y = 5.5;
-int vetor[5];
-
-/* Atribuições e expressões aritméticas */
-x = x + 1;
-y = y * 2.0;
-vetor[2] = x - 3;
-
-/* Estruturas condicionais */ 
-if (x > y) {
-    print("x é maior que y");
-} else if (x == y) {
-    print("x é igual a y");
-} else {
-    print("x é menor que y");
-}
-
-/* Estruturas de repetição */ 
-while (x < 20) {
-    x = x + 1;
-}
-
-/* Função e chamada */ 
+/* Function test */ 
 float soma(float a, float b) {
     return a + b;
 }
-y = soma(x, 5.0);
 
-/* Casos especiais */ 
-mensage33m = "Teste de string com escape: \\n Nova linha";
-print(mensagem);
+/* Global assignment test */ 
+x = 5;
 
-/* Erros Léxicos */
-@erro_simbolo_inválido;
-"string_nao_fechada
+/* Variable declaration test */ 
+int x = 5;
+
+/* Conditional (if/else) test */ 
+if (x > 5) {
+    x = x + 1;
+} else {
+    x = x - 1;
+}
+
+/* While loop test */ 
+while (x < 20) {
+    x = x + 1;
+}

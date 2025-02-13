@@ -1,37 +1,68 @@
 %{
+#include "node.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include "node.h"
 
 Node *root;
-
 int yylex();
 void yyerror(const char *s);
 %}
 
 %union {
-    char* num;
-    char *id;
+    char *value;
     Node *node;
 }
+%left COMMA
 
-%token <id> ID NUM RELOP
-%token INT FLOAT IF ELSE WHILE RETURN VOID
-%token SUM SUB DIV MUL GT LT EQ NE GE LE COMP_EQ
-%token OPN_SQR_BKT CLS_SQR_BKT OPN_CURLY_BKT CLS_CURLY_BKT SEMICOLON COLON COMMA OPN_PARENT CLS_PARENT
-%token STRING
+%token <value> INT FLOAT VOID IF ELSE WHILE RETURN
+%token <value> ID NUM STRING FLOAT_NUM
+%token <value> SUM SUB MUL DIV
+%token <value> GT LT EQ NE GE LE COMP_EQ
+%token <value> OPN_PARENT CLS_PARENT OPN_SQR_BKT CLS_SQR_BKT
+%token <value> OPN_CURLY_BKT CLS_CURLY_BKT SEMICOLON COMMA COLON
 
+%nonassoc LOWER_THAN_ELSE
+%nonassoc ELSE
 
-%type <node> program statement_list statement declaration attribution if_statement type condition expression
+%type <node> program statement_list statement declaration type
+%type <node> attribution expression condition if_statement
+%type <node> while_statement function_decl parameters return_statement
+%type <node> array_access variable
+%type <node> array_decl term factor argument_list block
+
+%type <node> top_level_item_list top_level_item
 
 %start program
 
 %%
 
 program:
-    statement_list { root = create_node("program", 1, $1); }
+      top_level_item_list { $$ = create_node("program", 1, $1); root = $$; }
+    ;
+
+top_level_item_list:
+      top_level_item { $$ = create_node("top_level_item_list", 1, $1); }
+    | top_level_item_list top_level_item { $$ = create_node("top_level_item_list", 2, $1, $2); }
+    ;
+
+top_level_item:
+      function_decl { $$ = $1; }
+    | statement { $$ = $1; }
+    ;
+
+function_decl:
+    type ID OPN_PARENT parameters CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT {
+        $$ = create_node("function", 4, $1, create_node($2, 0), $4, $7);
+    }
+    ;
+
+parameters:
+    /* empty */ { $$ = create_node("parameters", 0); }
+    | type ID { $$ = create_node("parameters", 2, $1, create_node($2, 0)); }
+   
+    | parameters COMMA parameters { $$ = create_node("parameters-list", 2, $1, $3); }
     ;
 
 statement_list:
@@ -40,74 +71,102 @@ statement_list:
     ;
 
 statement:
-    attribution { $$ = create_node("statement", 1, $1); }
-    | if_statement { $$ = create_node("statement", 1, $1); }
-    | declaration { $$ = create_node("statement", 1, $1); }
-    | while_statement { $$ = create_node("statement", 1, $1); }
-    | function_statement { $$ = create_node("statement", 1, $1); }
-    | function_call { $$ = create_node("statement", 1, $1); }
-    | return_statement { $$ = create_node("statement", 1, $1); } // 
+        block { $$ = $1; }
+    | declaration SEMICOLON          { $$ = create_node("statement", 1, $1); }
+    | attribution SEMICOLON        { $$ = create_node("statement", 1, $1); }
+    | if_statement                 { $$ = create_node("statement", 1, $1); }
+    | while_statement              { $$ = create_node("statement", 1, $1); }
+    | return_statement SEMICOLON   { $$ = create_node("statement", 1, $1); }
+    | expression SEMICOLON         { $$ = create_node("statement", 1, $1); }
     ;
 
 declaration:
-    type ID SEMICOLON { $$ = create_node("declaration", 2, $1, create_node($2, 0)); }
-    | type ID OPN_SQR_BKT NUM CLS_SQR_BKT SEMICOLON { $$ = create_node("declaration", 3, $1, create_node($2, 0), create_node($4, 0)); } // int id[num]; 
+    type ID array_decl { $$ = create_node("declaration", 3, $1, create_node($2, 0), $3); }
+    | type ID EQ expression { $$ = create_node("declaration", 4, $1, create_node($2, 0), create_node("=", 0), $4); }
+    ;
+
+array_decl:
+    /* empty */ { $$ = create_node("array_decl", 0); }
+    | OPN_SQR_BKT NUM CLS_SQR_BKT { $$ = create_node("array_size", 1, create_node($2, 0)); }
     ;
 
 type:
-    INT { $$ = create_node("INT", 0); }
-    | FLOAT { $$ = create_node("FLOAT", 0); }
+    INT { $$ = create_node("int", 0); }
+    | FLOAT { $$ = create_node("float", 0); }
+    | VOID { $$ = create_node("void", 0); }
     ;
 
 attribution:
-    ID EQ expression SEMICOLON { $$ = create_node("attribution", 2, create_node($1, 0), $3); }
-    ID OPN_SQR_BKT expression CLS_SQR_BKT EQ expression SEMICOLON { $$ = create_node("attribution", 3, create_node($1, 0), $3, $6); } // id[num] = expression;
+    variable EQ expression { $$ = create_node("attribution", 3, $1, create_node("=", 0), $3); }
+    ;
+
+variable:
+    ID { $$ = create_node("variable", 1, create_node($1, 0)); }
+    | ID array_access { $$ = create_node("array_access", 2, create_node($1, 0), $2); }
+    ;
+
+array_access:
+    OPN_SQR_BKT expression CLS_SQR_BKT { $$ = create_node("index", 1, $2); }
+    ;
+
+expression:
+    expression SUM term { $$ = create_node("expression", 3, $1, create_node("+", 0), $3); }
+    | expression SUB term { $$ = create_node("expression", 3, $1, create_node("-", 0), $3); }
+    | term { $$ = $1; }
+    ;
+
+term:
+    term MUL factor { $$ = create_node("term", 3, $1, create_node("*", 0), $3); }
+    | term DIV factor { $$ = create_node("term", 3, $1, create_node("/", 0), $3); }
+    | factor { $$ = $1; }
+    ;
+
+argument_list:
+      /* empty */            { $$ = create_node("arguments", 0); }
+    | expression             { $$ = create_node("arguments", 1, $1); }
+    | argument_list COMMA expression
+                              { $$ = create_node("arguments", 2, $1, $3); }
+    ;
+
+factor:
+      NUM                     { $$ = create_node("number", 1, create_node($1, 0)); }
+    | FLOAT_NUM               { $$ = create_node("float", 1, create_node($1, 0)); }
+    | STRING                  { $$ = create_node("string", 1, create_node($1, 0)); }
+    | ID OPN_PARENT argument_list CLS_PARENT
+                              { $$ = create_node("call", 2, create_node($1, 0), $3); }
+    | variable                { $$ = $1; }
+    | OPN_PARENT expression CLS_PARENT
+                              { $$ = $2; }
+    ;
+
+condition:
+    expression COMP_EQ expression { $$ = create_node("condition", 3, $1, create_node("==", 0), $3); }
+    | expression NE expression { $$ = create_node("condition", 3, $1, create_node("!=", 0), $3); }
+    | expression LT expression { $$ = create_node("condition", 3, $1, create_node("<", 0), $3); }
+    | expression LE expression { $$ = create_node("condition", 3, $1, create_node("<=", 0), $3); }
+    | expression GT expression { $$ = create_node("condition", 3, $1, create_node(">", 0), $3); }
+    | expression GE expression { $$ = create_node("condition", 3, $1, create_node(">=", 0), $3); }
+    ;
+
+block:
+    OPN_CURLY_BKT statement_list CLS_CURLY_BKT { $$ = create_node("block", 1, $2); }
     ;
 
 if_statement:
-    IF OPN_PARENT condition CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT ELSE OPN_CURLY_BKT statement_list CLS_CURLY_BKT { $$ = create_node("if_statement", 3, $3, $6, $10); }
-    | IF OPN_PARENT condition CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT { $$ = create_node("if_statement", 2, $3, $6); }
+      IF OPN_PARENT condition CLS_PARENT statement %prec LOWER_THAN_ELSE
+          { $$ = create_node("if", 2, $3, $5); }
+    | IF OPN_PARENT condition CLS_PARENT statement ELSE statement
+          { $$ = create_node("if", 3, $3, $5, $7); }
     ;
 
 while_statement:
-    WHILE OPN_PARENT condition CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT { $$ = create_node("while_statement", 2, $3, $6); }
-    ;
-
-function_statement:
-    type ID OPN_PARENT declaration CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT { $$ = create_node("function_statement", 3, $1, create_node($2, 0), $4, $7); }
-    | VOID ID OPN_PARENT CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT { $$ = create_node("function_statement", 2, create_node("VOID", 0), create_node($2, 0), $5); }
-
-function_call:
-    ID OPN_PARENT CLS_PARENT SEMICOLON { $$ = create_node("function_call", 1, create_node($1, 0)); }
-    | ID OPN_PARENT expression CLS_PARENT SEMICOLON { $$ = create_node("function_call", 2, create_node($1, 0), $3); }
-    ;
-condition:
-    expression RELOP expression { $$ = create_node("condition", 3, $1, create_node("relop",1,create_node($2,0)),$3); }
-
-RELOP:
-    GT { $$ = create_node("GT", 0); }
-    | LT { $$ = create_node("LT", 0); }
-    | EQ { $$ = create_node("EQ", 0); }
-    | NE { $$ = create_node("NE", 0); }
-    | GE { $$ = create_node("GE", 0); }
-    | LE { $$ = create_node("LE", 0); }
-    | COMP_EQ { $$ = create_node("COMP_EQ", 0); }
-    ;
-expression:
-    NUM { $$ = create_node($1, 0); }
-    | ID { $$ = create_node($1, 0); }
-    | expression OP expression { $$ = create_node("expression", 3, $1, create_node("+", 0), $3); }
-  
-
-OP:
-    SUM { $$ = create_node("SUM", 0); }
-    | SUB { $$ = create_node("SUB", 0); }
-    | DIV { $$ = create_node("DIV", 0); }
-    | MUL { $$ = create_node("MUL", 0); }
+    WHILE OPN_PARENT condition CLS_PARENT OPN_CURLY_BKT statement_list CLS_CURLY_BKT {
+        $$ = create_node("while", 2, $3, $6);
+    }
     ;
 
 return_statement:
-    RETURN expression SEMICOLON { $$ = create_node("return_statement", 1, $2); }
+    RETURN expression { $$ = create_node("return", 1, $2); }
     ;
 
 %%
@@ -142,7 +201,7 @@ void print_tree(Node *node, int depth) {
 }
 
 void yyerror(const char *s) {
-    fprintf(stderr, "Erro de sintaxe: %s\n", s);
+    fprintf(stderr, "Syntax error: %s\n", s);
 }
 
 int main() {

@@ -1,34 +1,33 @@
 %{
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <string.h>
-    
-    #include "node.h"  
-    #include "parser.tab.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "node.h"
+#include "parser.tab.h"
+  
+FILE *out;
+int linha;
 
-    FILE *out;
-    int linha;
+typedef struct {
+    char *id;
+    int index;
+} Symbol;
 
-    typedef struct {
-        char *id;
-        int index;
-    } Symbol;
+Symbol symbol_table[1000]; // Symbol table
+int symbol_count = 0;
 
-    Symbol symbol_table[1000]; // Tabela de símbolos
-    int symbol_count = 0;
-
-    // Função para inserir identificadores na tabela de símbolos
-    int insert_symbol(const char *id) {
-        for (int i = 0; i < symbol_count; i++) {
-            if (strcmp(symbol_table[i].id, id) == 0) {
-                return symbol_table[i].index; // Identificador já existe
-            }
+// Function to insert identifiers in the symbol table.
+int insert_symbol(const char *id) {
+    for (int i = 0; i < symbol_count; i++) {
+        if (strcmp(symbol_table[i].id, id) == 0) {
+            return symbol_table[i].index; // Identifier already exists.
         }
-        // Adicionar novo identificador
-        symbol_table[symbol_count].id = strdup(id);
-        symbol_table[symbol_count].index = symbol_count + 1;
-        return symbol_table[symbol_count++].index;
     }
+    // Add new identifier.
+    symbol_table[symbol_count].id = strdup(id);
+    symbol_table[symbol_count].index = symbol_count + 1;
+    return symbol_table[symbol_count++].index;
+}
 %}
 
 %option yylineno
@@ -43,7 +42,6 @@ num         {digit}+
 
 ID          ({letter}|_)({letter}|{digit}|_)*
 
-
 INT             "int"
 VOID            "void"
 IF              "if"
@@ -51,7 +49,6 @@ ELSE            "else"
 WHILE           "while"
 RETURN          "return"
 FLOAT           "float"
-
 
 WS          [ \t\r]+
 NL          \n
@@ -84,115 +81,78 @@ CLS_PARENT      "\)"
 ID_STARTS_W_DIGIT     ({digit})+({letter})+({letter}|{digit}|_)+ 
 INVALID_CHAR          (({letter}|{digit}|_)*({invalid_char})+({letter}|{digit}|_)+)*
 
-/* Regras de produção */
 %%
 
 {NL}                { linha = yylineno; }
+
 "/*"                { linha = yylineno; BEGIN(COMMENT); }
 <COMMENT>"*/"       { BEGIN(INITIAL); }
-<COMMENT>"/*"       { fprintf(out, "<%d, ERROR, \"Nested comment\">\n", yylineno); }
-<COMMENT>{NL}       { linha = yylineno; } /* Atualizar número da linha */
-<COMMENT><<EOF>>    { fprintf(out, "<%d, ERROR, \"Unclosed comment\">\n", linha); }
-<COMMENT>.          ; /* Ignorar outros caracteres no comentário */
+<COMMENT>"/*"       { fprintf(stderr, "<%d, ERROR, \"Nested comment\">\n", yylineno); }
+<COMMENT>{NL}       { linha = yylineno; } /* Update line number */
+<COMMENT><<EOF>>    { fprintf(stderr, "<%d, ERROR, \"Unclosed comment\">\n", linha); }
+<COMMENT>.          { /* Ignore all other characters inside a comment */ }
 
-{SUM}              { fprintf(out, "<OP, SUM, %s>\n", yytext); }
-{SUB}              { fprintf(out, "<OP, SUB, %s>\n", yytext); }
-{DIV}              { fprintf(out, "<OP, DIV, %s>\n", yytext); }
-{MUL}              { fprintf(out, "<OP, MUL, %s>\n", yytext); }
+{SUM}               { yylval.value = strdup(yytext); return SUM; }
+{SUB}               { yylval.value = strdup(yytext); return SUB; }
+{DIV}               { yylval.value = strdup(yytext); return DIV; }
+{MUL}               { yylval.value = strdup(yytext); return MUL; }
 
-{GT}               { fprintf(out, "<RELOP, GT, %s>\n", yytext); }
-{LT}               { fprintf(out, "<RELOP, LT, %s>\n", yytext); }
-{EQ}               { fprintf(out, "<RELOP, EQ, %s>\n", yytext); }
-{NE}               { fprintf(out, "<RELOP, NE, %s>\n", yytext); }
-{GE}               { fprintf(out, "<RELOP, GE, %s>\n", yytext); }
-{LE}               { fprintf(out, "<RELOP, LE, %s>\n", yytext); }
-{COMP_EQ}          { fprintf(out, "<RELOP, COMP_EQ, %s>\n", yytext); }
+{GT}                { yylval.value = strdup(yytext); return GT; }
+{LT}                { yylval.value = strdup(yytext); return LT; }
+{EQ}                { yylval.value = strdup(yytext); return EQ; }
+{NE}                { yylval.value = strdup(yytext); return NE; }
+{GE}                { yylval.value = strdup(yytext); return GE; }
+{LE}                { yylval.value = strdup(yytext); return LE; }
+{COMP_EQ}           { yylval.value = strdup(yytext); return COMP_EQ; }
 
+{OPN_SQR_BKT}       { yylval.value = strdup(yytext); return OPN_SQR_BKT; }
+{CLS_SQR_BKT}       { yylval.value = strdup(yytext); return CLS_SQR_BKT; }
+{OPN_CURLY_BKT}     { yylval.value = strdup(yytext); return OPN_CURLY_BKT; }
+{CLS_CURLY_BKT}     { yylval.value = strdup(yytext); return CLS_CURLY_BKT; }
+{SEMICOLON}         { yylval.value = strdup(yytext); return SEMICOLON; }
+{COLON}             { yylval.value = strdup(yytext); return COLON; }
+{COMMA}             { yylval.value = strdup(yytext); return COMMA; }
+{OPN_PARENT}        { yylval.value = strdup(yytext); return OPN_PARENT; }
+{CLS_PARENT}        { yylval.value = strdup(yytext); return CLS_PARENT; }
 
-{OPN_SQR_BKT}     { fprintf(out, "<SYM, OPN_SQR_BKT, %s>\n", yytext); }
-{CLS_SQR_BKT}     { fprintf(out, "<SYM, CLS_SQR_BKT, %s>\n", yytext); }
-{OPN_CURLY_BKT}   { fprintf(out, "<SYM, OPN_CURLY_BKT, %s>\n", yytext); }
-{CLS_CURLY_BKT}   { fprintf(out, "<SYM, CLS_CURLY_BKT, %s>\n", yytext); }
-{SEMICOLON}       { fprintf(out, "<SYM, SEMICOLON, %s>\n", yytext); }
-{COLON}           { fprintf(out, "<SYM, COLON, %s>\n", yytext); }
-{COMMA}           { fprintf(out, "<SYM, COMMA, %s>\n", yytext); }
-{OPN_PARENT}      { fprintf(out, "<SYM, OPN_PARENT, %s>\n", yytext); }
-{CLS_PARENT}      { fprintf(out, "<SYM, CLS_PARENT, %s>\n", yytext); }
+{FLOAT}             { yylval.value = strdup(yytext); return FLOAT; }
+{INT}               { yylval.value = strdup(yytext); return INT; }
+{VOID}              { yylval.value = strdup(yytext); return VOID; }
+{IF}                { yylval.value = strdup(yytext); return IF; }
+{ELSE}              { yylval.value = strdup(yytext); return ELSE; }
+{WHILE}             { yylval.value = strdup(yytext); return WHILE; }
+{RETURN}            { yylval.value = strdup(yytext); return RETURN; }
 
+{ID}                { 
+                        int index = insert_symbol(yytext);
+                        yylval.value = strdup(yytext);
+                        return ID; 
+                    }
 
-{FLOAT}            { fprintf(out, "<KEY, FLOAT, %s>\n", yytext); }
-{INT}              { fprintf(out, "<KEY, INT, %s>\n", yytext); }
-{VOID}             { fprintf(out, "<KEY, VOID, %s>\n", yytext); }
-{IF}               { fprintf(out, "<KEY, IF, %s>\n", yytext); }
-{ELSE}             { fprintf(out, "<KEY, ELSE, %s>\n", yytext); }
-{WHILE}            { fprintf(out, "<KEY, WHILE, %s>\n", yytext); }
-{RETURN}           { fprintf(out, "<KEY, RETURN, %s>\n", yytext); }
-
-{ID}                {
-                      int index = insert_symbol(yytext);
-                      fprintf(out, "<%d, ID, %s>\n", index, yytext);
-                  }
-
-{STRING}        { fprintf(out, "<STRING, %s>\n", yytext); }
+{STRING}            { yylval.value = strdup(yytext); return STRING; }
 
 \"([^\"\\\n]|\\[abfnrtv\"\'\\0])*\n {
-                      fprintf(out, "<%d, ERROR, \"Unclosed string\">\n", yylineno);
-                  }
+                        fprintf(stderr, "<%d, ERROR, \"Unclosed string\">\n", yylineno);
+                    }
 
-{WS}                ; /* Ignore spaces */
+{WS}                { /* do nothing */ }
 
-{float} {
-    fprintf(out, "<FLOAT, %s>\n", yytext);
-}
+{float}             { yylval.value = strdup(yytext); return FLOAT_NUM; }
 
-{num} {
-    fprintf(out, "<NUM, %s>\n", yytext);
-}
+{num}               { yylval.value = strdup(yytext); return NUM; }
 
 {ID_STARTS_W_DIGIT} {
-    fprintf(out, "<%d, ERROR, \"Invalid identifier starts with digit '%s'\">\n", yylineno, yytext);
-}
+                        fprintf(stderr, "<%d, ERROR, \"Invalid identifier starts with digit '%s'\">\n", yylineno, yytext);
+                    }
 
 {INVALID_CHAR} {
-    fprintf(out, "<%d, ERROR, \"Invalid identifier contains invalid characters '%s'\">\n", yylineno, yytext);
-}
+                        fprintf(stderr, "<%d, ERROR, \"Invalid identifier contains invalid characters '%s'\">\n", yylineno, yytext);
+                    }
 
-
-.                   { fprintf(out, "<%d, ERROR, \"Invalid character '%s'\">\n", yylineno, yytext); }
+.                   { fprintf(stderr, "<%d, ERROR, \"Invalid character '%s'\">\n", yylineno, yytext); }
 
 %%
 
 int yywrap() {
     return 1;
 }
-
-// int main(int argc, char *argv[]) {
-//     FILE *arquivo;
-//     if (argc < 3) {
-//         fprintf(stderr, "Usage: %s <input_file> <output_file>\n", argv[0]);
-//         return 1;
-//     }
-//     arquivo = fopen(argv[1], "r");
-//     if (!arquivo) {
-//         fprintf(stderr, "Error: Cannot open input file %s\n", argv[1]);
-//         return 1;
-//     }
-//     yyin = arquivo;
-//     out = fopen(argv[2], "w");
-//     if (!out) {
-//         fprintf(stderr, "Error: Cannot open output file %s\n", argv[2]);
-//         fclose(arquivo);
-//         return 1;
-//     }
-//     yylex();
-    
-//     // Imprimir a tabela de símbolos no final
-//     fprintf(out, "\nTabela de Símbolos:\n");
-//     for (int i = 0; i < symbol_count; i++) {
-//         fprintf(out, "<%d, %s>\n", symbol_table[i].index, symbol_table[i].id);
-//     }
-
-//     fclose(arquivo);
-//     fclose(out);
-//     return 0;
-// }
