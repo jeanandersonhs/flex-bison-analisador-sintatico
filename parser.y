@@ -14,6 +14,7 @@ void yyerror(const char *s);
     char *value;
     Node *node;
 }
+%left COMMA
 
 %token <value> INT FLOAT VOID IF ELSE WHILE RETURN
 %token <value> ID NUM STRING FLOAT_NUM
@@ -60,7 +61,8 @@ function_decl:
 parameters:
     /* empty */ { $$ = create_node("parameters", 0); }
     | type ID { $$ = create_node("parameters", 2, $1, create_node($2, 0)); }
-    | parameters COMMA type ID { $$ = create_node("parameters", 3, $1, $3, create_node($4, 0)); }
+   
+    | parameters COMMA parameters { $$ = create_node("parameters-list", 2, $1, $3); }
     ;
 
 statement_list:
